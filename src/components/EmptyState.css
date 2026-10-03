@@ -1,0 +1,29 @@
+.empty-state {
+  text-align: center;
+  padding: 64px 20px;
+  color: var(--text-500);
+}
+
+.empty-state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text-400);
+  margin-bottom: 18px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  color: var(--navy-800);
+  margin-bottom: 6px;
+}
+
+.empty-state p {
+  font-size: 14.5px;
+  max-width: 380px;
+  margin: 0 auto;
+}

@@ -1,0 +1,229 @@
+/* ==========================================================================
+   Under Development Dialog Component Styles
+   ========================================================================== */
+
+.dev-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(8, 10, 13, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dev-dialog-container {
+  background: #11141b;
+  border: 1px solid rgba(255, 138, 0, 0.2);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 520px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 24px 64px rgba(0, 0, 0, 0.6), 
+    0 0 32px rgba(255, 138, 0, 0.1);
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Tricolor Top Strip */
+.dev-dialog-accent {
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    #008B5A 0%,
+    #008B5A 33.3%,
+    #F5F5F5 33.3%,
+    #F5F5F5 66.6%,
+    #FF8A00 66.6%,
+    #FF8A00 100%
+  );
+}
+
+/* Close Button styling */
+.dev-dialog-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #A8ADB5;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dev-dialog-close-btn:hover {
+  background: rgba(255, 138, 0, 0.1);
+  border-color: rgba(255, 138, 0, 0.3);
+  color: #FF8A00;
+  transform: rotate(90deg);
+}
+
+.dev-dialog-content {
+  padding: 40px 30px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Animated gear icon container */
+.dev-dialog-icon-wrapper {
+  background: rgba(255, 138, 0, 0.06);
+  border: 1px solid rgba(255, 138, 0, 0.15);
+  color: #FF8A00;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 0 20px rgba(255, 138, 0, 0.08);
+}
+
+.dev-dialog-gear-icon {
+  animation: gearRotate 6s linear infinite;
+}
+
+/* Titles */
+.dev-dialog-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: #F5F5F5;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.dev-dialog-orange-text {
+  color: #FF8A00;
+}
+
+.dev-dialog-title-english {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 245, 245, 0.35);
+  margin-bottom: 20px;
+}
+
+.dev-dialog-divider {
+  width: 60px;
+  height: 2px;
+  background: #FF8A00;
+  margin-bottom: 22px;
+  border-radius: 1px;
+}
+
+/* Message body text styles */
+.dev-dialog-body-hindi {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #F5F5F5;
+  margin-bottom: 18px;
+}
+
+.dev-dialog-status-text {
+  display: block;
+  font-size: 14px;
+  color: #A8ADB5;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dev-dialog-body-english {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #A8ADB5;
+  margin-bottom: 28px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-top: 18px;
+  width: 100%;
+}
+
+.dev-dialog-body-english strong {
+  color: #F5F5F5;
+}
+
+/* CTA Confirm Button */
+.dev-dialog-btn {
+  background: #FF8A00;
+  color: #ffffff;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(255, 138, 0, 0.25);
+  width: 100%;
+}
+
+.dev-dialog-btn:hover {
+  background: #ffa433;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 138, 0, 0.35);
+}
+
+.dev-dialog-btn:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes gearRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mobile responsive padding constraints */
+@media (max-width: 480px) {
+  .dev-dialog-content {
+    padding: 30px 20px;
+  }
+  .dev-dialog-title {
+    font-size: 19px;
+  }
+  .dev-dialog-body-hindi {
+    font-size: 14px;
+  }
+}
