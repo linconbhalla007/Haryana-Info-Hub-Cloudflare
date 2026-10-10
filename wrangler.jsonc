@@ -1,0 +1,25 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "haryana-info-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-25",
+
+	"compatibility_flags": ["nodejs_compat"],
+
+	"observability": {
+		"enabled": true,
+	},
+
+	"upload_source_maps": true,
+
+	"vars": {
+		"R2_PUBLIC_URL": "https://pub-641d2c0c02d04af2a9bfaa8d4aece94e.r2.dev"
+	},
+
+	"r2_buckets": [
+		{
+			"binding": "PDF_BUCKET",
+			"bucket_name": "haryana-info-pdfs"
+		}
+	],
+}

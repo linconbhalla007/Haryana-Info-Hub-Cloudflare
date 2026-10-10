@@ -1,4 +1,27 @@
 {
+  "name": "haryana-info-api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "test": "vitest",
+    "cf-typegen": "wrangler types"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.0.0",
+    "@types/node": "^26.4.0",
+    "typescript": "^5.5.2",
+    "vitest": "~4.1.0",
+    "wrangler": "^4.127.1"
+  },
+  "dependencies": {
+    "mongodb": "^7.6.0"
+  }
+}
+
+{
   "name": "haryana-info-hub",
   "private": true,
   "version": "1.0.0",
