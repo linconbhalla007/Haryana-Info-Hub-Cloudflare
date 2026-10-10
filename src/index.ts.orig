@@ -1,7 +1,6 @@
 import { handleSystemRoutes } from './routes/system';
 import { handleAuthRoutes } from './routes/auth';
 import { handleGovernmentOrderRoutes } from './routes/governmentOrders';
-import { handleHomepageSectionRoutes } from './routes/homepageSections';
 
 interface Env {
 	MONGODB_URI: string;
@@ -54,13 +53,6 @@ export default {
 
 		if (governmentOrderResponse) {
 			return governmentOrderResponse;
-		}
-
-		// Homepage sections routes
-		const homepageSectionResponse = await handleHomepageSectionRoutes(request, env, corsHeaders);
-
-		if (homepageSectionResponse) {
-			return homepageSectionResponse;
 		}
 
 		// Default response
