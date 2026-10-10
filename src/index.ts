@@ -2,11 +2,13 @@ import { handleSystemRoutes } from './routes/system';
 import { handleAuthRoutes } from './routes/auth';
 import { handleGovernmentOrderRoutes } from './routes/governmentOrders';
 import { handleHomepageSectionRoutes } from './routes/homepageSections';
+import { handleLatestUpdatesRoutes } from './routes/latestUpdates';
 
 interface Env {
 	MONGODB_URI: string;
 	PDF_BUCKET: R2Bucket;
 	R2_PUBLIC_URL: string;
+	LATEST_UPDATES_KV?: any;
 }
 
 function jsonResponse(data: unknown, status = 200, corsHeaders: Record<string, string> = {}): Response {
@@ -61,6 +63,13 @@ export default {
 
 		if (homepageSectionResponse) {
 			return homepageSectionResponse;
+		}
+
+		// Latest updates routes
+		const latestUpdatesResponse = await handleLatestUpdatesRoutes(request, env, corsHeaders);
+
+		if (latestUpdatesResponse) {
+			return latestUpdatesResponse;
 		}
 
 		// Default response

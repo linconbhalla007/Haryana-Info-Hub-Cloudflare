@@ -8,4 +8,5 @@ export interface GovernmentOrder {
 	orderNumber: string;
 	pdf: string;
 	pdfKey?: string;
+	createdAt?: string;
 }

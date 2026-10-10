@@ -1,5 +1,7 @@
 import { getDatabase, getNextGovernmentOrderId } from '../db/mongodb';
 import { GovernmentOrder } from '../types/governmentOrder';
+import { saveLatestUpdateAtWriteTime } from '../cache/latestUpdates';
+import { LatestUpdateItem } from '../types/latestUpdate';
 
 interface Env {
 	MONGODB_URI: string;
@@ -196,6 +198,8 @@ export async function handleGovernmentOrderRoutes(
 				return jsonResponse({ success: false, message: 'Failed to upload government order PDF' }, 500, corsHeaders);
 			}
 
+			const createdAt = new Date().toISOString();
+
 			const order: GovernmentOrder = {
 				id,
 				title,
@@ -206,6 +210,7 @@ export async function handleGovernmentOrderRoutes(
 				orderNumber,
 				pdf,
 				pdfKey,
+				createdAt,
 			};
 
 			try {
@@ -222,6 +227,23 @@ export async function handleGovernmentOrderRoutes(
 				}
 
 				return jsonResponse({ success: false, message: 'Failed to create government order' }, 500, corsHeaders);
+			}
+
+			// Pre-aggregate & write-time cache for Latest Updates
+			const latestUpdateItem: LatestUpdateItem = {
+				id: `notification-${order.id}`,
+				title: order.title,
+				description: order.description,
+				type: 'government_order',
+				link: `/government-orders/${order.id}`,
+				createdAt,
+				enabled: true,
+			};
+
+			try {
+				await saveLatestUpdateAtWriteTime(env, latestUpdateItem, url.origin);
+			} catch (cacheError) {
+				console.error('Latest updates write-time cache failed:', cacheError);
 			}
 
 			return jsonResponse(
