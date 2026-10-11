@@ -59,6 +59,7 @@ export async function handleLatestUpdatesRoutes(
 				'Cache-Control',
 				`public, max-age=0, s-maxage=${latestUpdatesCacheTtlSeconds}, must-revalidate`,
 			);
+			response.headers.set('X-Cache', 'MISS');
 
 			// 3. Store response in edge cache
 			await cacheLatestUpdatesResponse(url.origin, response);

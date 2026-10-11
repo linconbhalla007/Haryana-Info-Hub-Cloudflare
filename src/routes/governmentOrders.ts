@@ -1,7 +1,13 @@
 import { getDatabase, getNextGovernmentOrderId } from '../db/mongodb';
 import { GovernmentOrder } from '../types/governmentOrder';
-import { saveLatestUpdateAtWriteTime } from '../cache/latestUpdates';
+import { refreshLatestUpdatesCache, saveLatestUpdateAtWriteTime } from '../cache/latestUpdates';
 import { LatestUpdateItem } from '../types/latestUpdate';
+import {
+	cacheGovernmentOrders,
+	getCachedGovernmentOrders,
+	governmentOrdersCacheTtlSeconds,
+	invalidateGovernmentOrdersCache,
+} from '../cache/governmentOrders';
 
 interface Env {
 	MONGODB_URI: string;
@@ -111,6 +117,12 @@ export async function handleGovernmentOrderRoutes(
 
 	if (url.pathname === basePath && request.method === 'GET') {
 		try {
+			// Check edge cache first
+			const cachedResponse = await getCachedGovernmentOrders(request.url);
+			if (cachedResponse) {
+				return cachedResponse;
+			}
+
 			const page = parsePositiveInteger(url.searchParams.get('page'), defaultPage, 'page');
 			const requestedLimit = parsePositiveInteger(url.searchParams.get('limit'), defaultLimit, 'limit');
 			const limit = Math.min(requestedLimit, maximumLimit);
@@ -129,7 +141,7 @@ export async function handleGovernmentOrderRoutes(
 			]);
 			const totalPages = Math.ceil(total / limit);
 
-			return jsonResponse(
+			const response = jsonResponse(
 				{
 					success: true,
 					count: orders.length,
@@ -146,6 +158,16 @@ export async function handleGovernmentOrderRoutes(
 				200,
 				corsHeaders,
 			);
+
+			response.headers.set(
+				'Cache-Control',
+				`public, max-age=0, s-maxage=${governmentOrdersCacheTtlSeconds}, must-revalidate`,
+			);
+			response.headers.set('X-Cache', 'MISS');
+
+			await cacheGovernmentOrders(request.url, response);
+
+			return response;
 		} catch (error) {
 			console.error('Get government orders error:', error);
 			const message = error instanceof Error ? error.message : String(error);
@@ -246,6 +268,13 @@ export async function handleGovernmentOrderRoutes(
 				console.error('Latest updates write-time cache failed:', cacheError);
 			}
 
+			// Invalidate Government Orders Edge Cache
+			try {
+				await invalidateGovernmentOrdersCache(url.origin);
+			} catch (cacheError) {
+				console.error('Government orders cache invalidation failed:', cacheError);
+			}
+
 			return jsonResponse(
 				{
 					success: true,
@@ -293,6 +322,11 @@ export async function handleGovernmentOrderRoutes(
 
 		if (request.method === 'GET') {
 			try {
+				const cachedResponse = await getCachedGovernmentOrders(request.url);
+				if (cachedResponse) {
+					return cachedResponse;
+				}
+
 				const db = await getDatabase(env);
 
 				const order = await db.collection<GovernmentOrder>(collectionName).findOne({ id });
@@ -308,7 +342,7 @@ export async function handleGovernmentOrderRoutes(
 					);
 				}
 
-				return jsonResponse(
+				const response = jsonResponse(
 					{
 						success: true,
 						data: order,
@@ -316,6 +350,16 @@ export async function handleGovernmentOrderRoutes(
 					200,
 					corsHeaders,
 				);
+
+				response.headers.set(
+					'Cache-Control',
+					`public, max-age=0, s-maxage=${governmentOrdersCacheTtlSeconds}, must-revalidate`,
+				);
+				response.headers.set('X-Cache', 'MISS');
+
+				await cacheGovernmentOrders(request.url, response);
+
+				return response;
 			} catch (error) {
 				console.error('Get single government order error:', error);
 
@@ -407,6 +451,18 @@ export async function handleGovernmentOrderRoutes(
 					},
 				);
 
+				try {
+					await invalidateGovernmentOrdersCache(url.origin, id);
+				} catch (cacheError) {
+					console.error('Government orders cache invalidation failed:', cacheError);
+				}
+
+				try {
+					await refreshLatestUpdatesCache(env, url.origin);
+				} catch (cacheError) {
+					console.error('Latest updates cache refresh failed:', cacheError);
+				}
+
 				return jsonResponse(
 					{
 						success: true,
@@ -466,6 +522,18 @@ export async function handleGovernmentOrderRoutes(
 						404,
 						corsHeaders,
 					);
+				}
+
+				try {
+					await invalidateGovernmentOrdersCache(url.origin, id);
+				} catch (cacheError) {
+					console.error('Government orders cache invalidation failed:', cacheError);
+				}
+
+				try {
+					await refreshLatestUpdatesCache(env, url.origin);
+				} catch (cacheError) {
+					console.error('Latest updates cache refresh failed:', cacheError);
 				}
 
 				return jsonResponse(
