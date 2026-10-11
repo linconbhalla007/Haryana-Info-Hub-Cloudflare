@@ -492,5 +492,109 @@ export async function handleGovernmentOrderRoutes(
 		}
 	}
 
+	// ==================================================
+	// DIRECT PDF DOWNLOAD
+	// ==================================================
+
+	const downloadPrefix = '/api/download-order/';
+	if (url.pathname.startsWith(downloadPrefix) && request.method === 'GET') {
+		const id = decodeURIComponent(url.pathname.substring(downloadPrefix.length)).trim();
+
+		if (!id) {
+			return jsonResponse(
+				{
+					success: false,
+					message: 'Government order id is required',
+				},
+				400,
+				corsHeaders,
+			);
+		}
+
+		try {
+			const db = await getDatabase(env);
+			const order = await db.collection<GovernmentOrder>(collectionName).findOne({ id });
+
+			if (!order) {
+				return jsonResponse(
+					{
+						success: false,
+						message: 'Government order not found',
+					},
+					404,
+					corsHeaders,
+				);
+			}
+
+			const pdfKey = order.pdfKey || `government-orders/${id}.pdf`;
+			let pdfStream: ReadableStream | null = null;
+			let etag: string | undefined;
+
+			const object = await env.PDF_BUCKET.get(pdfKey);
+			if (object) {
+				pdfStream = object.body;
+				etag = object.httpEtag;
+			} else {
+				// Fallback to public R2 URL (essential during local development or when R2 bucket is remote)
+				const publicUrl = order.pdf || getPublicPdfUrl(env, pdfKey);
+				try {
+					const remoteResponse = await fetch(publicUrl);
+					if (remoteResponse.ok && remoteResponse.body) {
+						pdfStream = remoteResponse.body;
+						etag = remoteResponse.headers.get('ETag') || undefined;
+					}
+				} catch (fetchError) {
+					console.error('Failed to fetch fallback public PDF:', fetchError);
+				}
+			}
+
+			if (!pdfStream) {
+				return jsonResponse(
+					{
+						success: false,
+						message: 'PDF file not found in storage',
+					},
+					404,
+					corsHeaders,
+				);
+			}
+
+			const rawTitle = (order.title || 'haryana-order').trim();
+			const safeTitle = rawTitle.replace(/["\r\n/\\]/g, '').trim() || 'haryana-order';
+			const encodedTitle = encodeURIComponent(rawTitle);
+
+			const headers = new Headers();
+			headers.set('Content-Type', 'application/pdf');
+			headers.set(
+				'Content-Disposition',
+				`attachment; filename="${safeTitle}.pdf"; filename*=UTF-8''${encodedTitle}.pdf`,
+			);
+			for (const [key, value] of Object.entries(corsHeaders)) {
+				headers.set(key, value);
+			}
+
+			if (etag) {
+				headers.set('ETag', etag);
+			}
+
+			return new Response(pdfStream, {
+				status: 200,
+				headers,
+			});
+		} catch (error) {
+			console.error('Download government order PDF error:', error);
+
+			return jsonResponse(
+				{
+					success: false,
+					message: 'Failed to download PDF',
+					error: error instanceof Error ? error.message : String(error),
+				},
+				500,
+				corsHeaders,
+			);
+		}
+	}
+
 	return null;
 }
