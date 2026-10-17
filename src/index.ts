@@ -3,6 +3,7 @@ import { handleAuthRoutes } from './routes/auth';
 import { handleGovernmentOrderRoutes } from './routes/governmentOrders';
 import { handleHomepageSectionRoutes } from './routes/homepageSections';
 import { handleLatestUpdatesRoutes } from './routes/latestUpdates';
+import { handleEmployeeProformaRoutes } from './routes/employeeProformas';
 
 interface Env {
 	MONGODB_URI: string;
@@ -70,6 +71,13 @@ export default {
 
 		if (latestUpdatesResponse) {
 			return latestUpdatesResponse;
+		}
+
+		// Employee Proformas routes
+		const employeeProformaResponse = await handleEmployeeProformaRoutes(request, env, corsHeaders);
+
+		if (employeeProformaResponse) {
+			return employeeProformaResponse;
 		}
 
 		// Default response

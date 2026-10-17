@@ -48,6 +48,11 @@ interface GovernmentOrderCounter {
 	sequence: number;
 }
 
+interface EmployeeProformaCounter {
+	_id: 'employee_proformas';
+	sequence: number;
+}
+
 const governmentOrdersCollection = 'government_orders';
 
 /**
@@ -176,4 +181,24 @@ export async function getNextGovernmentOrderId(env: Env): Promise<string> {
 	}
 
 	return `order-${String(counter.sequence).padStart(3, '0')}`;
+}
+
+/**
+ * Atomically reserves the next employee proforma ID using the counters
+ * collection. Uses its own counter key 'employee_proformas'.
+ */
+export async function getNextEmployeeProformaId(env: Env): Promise<string> {
+	const db = await getDatabase(env);
+
+	const counter = await db.collection<EmployeeProformaCounter>('counters').findOneAndUpdate(
+		{ _id: 'employee_proformas' },
+		{ $inc: { sequence: 1 } },
+		{ upsert: true, returnDocument: 'after' },
+	);
+
+	if (!counter || !Number.isSafeInteger(counter.sequence) || counter.sequence < 1) {
+		throw new Error('Employee proforma counter is missing or invalid');
+	}
+
+	return `proforma-${String(counter.sequence).padStart(3, '0')}`;
 }
