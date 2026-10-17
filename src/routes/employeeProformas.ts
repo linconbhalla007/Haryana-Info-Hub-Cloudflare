@@ -6,6 +6,7 @@ import {
 	getCachedEmployeeProformas,
 	invalidateEmployeeProformasCache,
 } from '../cache/employeeProformas';
+import { refreshLatestUpdatesCache } from '../cache/latestUpdates';
 
 interface Env {
 	MONGODB_URI: string;
@@ -256,6 +257,13 @@ export async function handleEmployeeProformaRoutes(
 				console.error('Employee proformas cache invalidation failed:', cacheError);
 			}
 
+			// Refresh Latest Updates cache to include this new proforma
+			try {
+				await refreshLatestUpdatesCache(env, url.origin);
+			} catch (cacheError) {
+				console.error('Latest updates cache refresh failed after proforma create:', cacheError);
+			}
+
 			return jsonResponse(
 				{
 					success: true,
@@ -437,6 +445,13 @@ export async function handleEmployeeProformaRoutes(
 					console.error('Employee proformas cache invalidation failed:', cacheError);
 				}
 
+				// Refresh Latest Updates cache to reflect the updated proforma
+				try {
+					await refreshLatestUpdatesCache(env, url.origin);
+				} catch (cacheError) {
+					console.error('Latest updates cache refresh failed after proforma update:', cacheError);
+				}
+
 				return jsonResponse(
 					{
 						success: true,
@@ -502,6 +517,13 @@ export async function handleEmployeeProformaRoutes(
 					await invalidateEmployeeProformasCache(url.origin, id);
 				} catch (cacheError) {
 					console.error('Employee proformas cache invalidation failed:', cacheError);
+				}
+
+				// Refresh Latest Updates cache to remove the deleted proforma
+				try {
+					await refreshLatestUpdatesCache(env, url.origin);
+				} catch (cacheError) {
+					console.error('Latest updates cache refresh failed after proforma delete:', cacheError);
 				}
 
 				return jsonResponse(
