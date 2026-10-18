@@ -2,6 +2,7 @@ import { getDatabase, getNextGovernmentOrderId } from '../db/mongodb';
 import { GovernmentOrder } from '../types/governmentOrder';
 import { refreshLatestUpdatesCache, saveLatestUpdateAtWriteTime } from '../cache/latestUpdates';
 import { LatestUpdateItem } from '../types/latestUpdate';
+import { ORDER_TYPES } from '../constants/orderTypes';
 import {
 	cacheGovernmentOrders,
 	getCachedGovernmentOrders,
@@ -141,11 +142,16 @@ export async function handleGovernmentOrderRoutes(
 			]);
 			const totalPages = Math.ceil(total / limit);
 
+			const formattedOrders = orders.map((order) => ({
+				...order,
+				orderType: order.orderType || ORDER_TYPES.GOVERNMENT_ORDER,
+			}));
+
 			const response = jsonResponse(
 				{
 					success: true,
-					count: orders.length,
-					data: orders,
+					count: formattedOrders.length,
+					data: formattedOrders,
 					pagination: {
 						page,
 						limit,
@@ -224,6 +230,7 @@ export async function handleGovernmentOrderRoutes(
 
 			const order: GovernmentOrder = {
 				id,
+				orderType: ORDER_TYPES.GOVERNMENT_ORDER,
 				title,
 				date,
 				department,
@@ -345,7 +352,10 @@ export async function handleGovernmentOrderRoutes(
 				const response = jsonResponse(
 					{
 						success: true,
-						data: order,
+						data: {
+							...order,
+							orderType: order.orderType || ORDER_TYPES.GOVERNMENT_ORDER,
+						},
 					},
 					200,
 					corsHeaders,
@@ -463,11 +473,18 @@ export async function handleGovernmentOrderRoutes(
 					console.error('Latest updates cache refresh failed:', cacheError);
 				}
 
+				const formattedResult = result
+					? {
+							...result,
+							orderType: (result as GovernmentOrder).orderType || ORDER_TYPES.GOVERNMENT_ORDER,
+					  }
+					: result;
+
 				return jsonResponse(
 					{
 						success: true,
 						message: 'Government order updated successfully',
-						data: result,
+						data: formattedResult,
 					},
 					200,
 					corsHeaders,

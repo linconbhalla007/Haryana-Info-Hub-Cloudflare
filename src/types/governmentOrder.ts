@@ -1,5 +1,8 @@
+import { OrderType } from '../constants/orderTypes';
+
 export interface GovernmentOrder {
 	id: string;
+	orderType?: OrderType | string;
 	title: string;
 	date: string;
 	department: string;

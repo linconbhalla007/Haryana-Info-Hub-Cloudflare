@@ -1,5 +1,6 @@
 import { getDatabase, getNextEmployeeProformaId } from '../db/mongodb';
 import { EmployeeProforma } from '../types/employeeProforma';
+import { ORDER_TYPES } from '../constants/orderTypes';
 import {
 	cacheEmployeeProformas,
 	employeeProformasCacheTtlSeconds,
@@ -140,11 +141,16 @@ export async function handleEmployeeProformaRoutes(
 			]);
 			const totalPages = Math.ceil(total / limit);
 
+			const formattedProformas = proformas.map((proforma) => ({
+				...proforma,
+				orderType: proforma.orderType || ORDER_TYPES.PROFORMA_ORDER,
+			}));
+
 			const response = jsonResponse(
 				{
 					success: true,
-					count: proformas.length,
-					data: proformas,
+					count: formattedProformas.length,
+					data: formattedProformas,
 					pagination: {
 						page,
 						limit,
@@ -223,6 +229,7 @@ export async function handleEmployeeProformaRoutes(
 
 			const proforma: EmployeeProforma = {
 				id,
+				orderType: ORDER_TYPES.PROFORMA_ORDER,
 				title,
 				date,
 				department,
@@ -333,7 +340,10 @@ export async function handleEmployeeProformaRoutes(
 				const response = jsonResponse(
 					{
 						success: true,
-						data: proforma,
+						data: {
+							...proforma,
+							orderType: proforma.orderType || ORDER_TYPES.PROFORMA_ORDER,
+						},
 					},
 					200,
 					corsHeaders,
@@ -452,11 +462,18 @@ export async function handleEmployeeProformaRoutes(
 					console.error('Latest updates cache refresh failed after proforma update:', cacheError);
 				}
 
+				const formattedResult = result
+					? {
+							...result,
+							orderType: (result as EmployeeProforma).orderType || ORDER_TYPES.PROFORMA_ORDER,
+					  }
+					: result;
+
 				return jsonResponse(
 					{
 						success: true,
 						message: 'Employee proforma updated successfully',
-						data: result,
+						data: formattedResult,
 					},
 					200,
 					corsHeaders,
