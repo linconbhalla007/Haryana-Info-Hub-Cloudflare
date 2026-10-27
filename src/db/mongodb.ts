@@ -1,4 +1,12 @@
 import { MongoClient, Db } from 'mongodb';
+import { EventEmitter } from 'node:events';
+
+// Prevent EventEmitter memory leak warning during connection pooling in local development
+try {
+	EventEmitter.defaultMaxListeners = 30;
+} catch {
+	// Ignore if runtime restricts defaultMaxListeners
+}
 
 interface Env {
 	MONGODB_URI: string;
@@ -50,6 +58,11 @@ interface GovernmentOrderCounter {
 
 interface EmployeeProformaCounter {
 	_id: 'employee_proformas';
+	sequence: number;
+}
+
+interface GovernmentJobCounter {
+	_id: 'government_jobs';
 	sequence: number;
 }
 
@@ -124,6 +137,12 @@ export async function getDatabase(env: Env): Promise<Db> {
 			tls: true,
 			maxIdleTimeMS: 30000,
 		});
+
+		try {
+			client.setMaxListeners(30);
+		} catch {
+			// Safe fallback
+		}
 
 		try {
 			await withTimeout(
@@ -202,3 +221,24 @@ export async function getNextEmployeeProformaId(env: Env): Promise<string> {
 
 	return `proforma-${String(counter.sequence).padStart(3, '0')}`;
 }
+
+/**
+ * Atomically reserves the next government job ID using the counters
+ * collection. Uses its own counter key 'government_jobs'.
+ */
+export async function getNextGovernmentJobId(env: Env): Promise<string> {
+	const db = await getDatabase(env);
+
+	const counter = await db.collection<GovernmentJobCounter>('counters').findOneAndUpdate(
+		{ _id: 'government_jobs' },
+		{ $inc: { sequence: 1 } },
+		{ upsert: true, returnDocument: 'after' },
+	);
+
+	if (!counter || !Number.isSafeInteger(counter.sequence) || counter.sequence < 1) {
+		throw new Error('Government job counter is missing or invalid');
+	}
+
+	return `job-${String(counter.sequence).padStart(3, '0')}`;
+}
+

@@ -4,6 +4,7 @@ import { handleGovernmentOrderRoutes } from './routes/governmentOrders';
 import { handleHomepageSectionRoutes } from './routes/homepageSections';
 import { handleLatestUpdatesRoutes } from './routes/latestUpdates';
 import { handleEmployeeProformaRoutes } from './routes/employeeProformas';
+import { handleGovernmentJobRoutes } from './routes/governmentJobs';
 
 interface Env {
 	MONGODB_URI: string;
@@ -78,6 +79,13 @@ export default {
 
 		if (employeeProformaResponse) {
 			return employeeProformaResponse;
+		}
+
+		// Government Jobs routes
+		const governmentJobResponse = await handleGovernmentJobRoutes(request, env, corsHeaders);
+
+		if (governmentJobResponse) {
+			return governmentJobResponse;
 		}
 
 		// Default response
